@@ -1,4 +1,11 @@
-import type { CSSProperties, ChangeEvent, DragEvent, ReactNode } from 'react'
+import type {
+  CSSProperties,
+  ChangeEvent,
+  DragEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
@@ -20,6 +27,7 @@ import {
   CheckmarkCircle20Filled,
   Copy24Regular,
   DocumentTable24Regular,
+  Filter16Regular,
 } from '@fluentui/react-icons'
 import { copySummaryToClipboard } from './clipboard'
 import {
@@ -332,89 +340,102 @@ function App() {
 
       <section className="workspace">
         <section className="gridArea">
-          <div className="tableHeader">
-            <div>
-              <Text weight="semibold">原始数据预览</Text>
-              <p>
-                {preview
-                  ? `${fileName} · ${preview.sheet_name} · 总行数 ${preview.rows.length}${activeFilterCount ? ` · 过滤后 ${visibleSourceRows.length} 行` : ''}`
-                  : '等待上传 Excel'}
-              </p>
-            </div>
-            <HeaderRowControl
-              headerRow={headerRow}
-              disabled={!fileId || loading === 'preview'}
-              onHeaderRowChange={setHeaderRow}
-              onApply={() => loadPreview()}
-            />
-          </div>
+          <ResizableSplit
+            className="previewSplit"
+            ariaLabel="调整原始数据和汇总结果比例"
+            firstClassName="previewPane"
+            secondClassName="previewPane"
+            first={
+              <>
+                <div className="tableHeader">
+                  <div>
+                    <Text weight="semibold">原始数据预览</Text>
+                    <p>
+                      {preview
+                        ? `${fileName} · ${preview.sheet_name} · 总行数 ${preview.rows.length}${activeFilterCount ? ` · 过滤后 ${visibleSourceRows.length} 行` : ''}`
+                        : '等待上传 Excel'}
+                    </p>
+                  </div>
+                  <HeaderRowControl
+                    headerRow={headerRow}
+                    disabled={!fileId || loading === 'preview'}
+                    onHeaderRowChange={setHeaderRow}
+                    onApply={() => loadPreview()}
+                  />
+                </div>
 
-          <ExcelWorkbookFrame
-            columns={preview?.columns ?? []}
-            rows={visibleSourceRows}
-            rowIndexes={visibleSourceRowIndexes}
-            firstRowNumber={preview?.header_row ?? 1}
-            headerStyle={preview?.header_style}
-            dataStyle={preview?.data_style}
-            rowHeights={preview?.row_heights}
-            emptyText="选择 Excel 后在这里预览原始数据"
-            headerFilters={sourceFilters}
-            filterOptionRows={preview?.rows ?? []}
-            onHeaderFilterChange={handleSourceFilterChange}
-            onCellChange={handleSourceCellChange}
-            footer={
-              <SheetTabs
-                sheets={sheets}
-                selectedSheet={selectedSheet}
-                disabled={!fileId || loading === 'preview'}
-                onSelect={(sheet) => loadPreview(sheet, headerRow)}
-              />
+                <ExcelWorkbookFrame
+                  columns={preview?.columns ?? []}
+                  rows={visibleSourceRows}
+                  rowIndexes={visibleSourceRowIndexes}
+                  firstRowNumber={preview?.header_row ?? 1}
+                  headerStyle={preview?.header_style}
+                  dataStyle={preview?.data_style}
+                  rowHeights={preview?.row_heights}
+                  emptyText="选择 Excel 后在这里预览原始数据"
+                  headerFilters={sourceFilters}
+                  filterOptionRows={preview?.rows ?? []}
+                  onHeaderFilterChange={handleSourceFilterChange}
+                  onCellChange={handleSourceCellChange}
+                  footer={
+                    <SheetTabs
+                      sheets={sheets}
+                      selectedSheet={selectedSheet}
+                      disabled={!fileId || loading === 'preview'}
+                      onSelect={(sheet) => loadPreview(sheet, headerRow)}
+                    />
+                  }
+                />
+              </>
+            }
+            second={
+              <>
+                <div className="tableHeader resultTitle">
+                  <div>
+                    <Text weight="semibold">汇总结果预览</Text>
+                    <p>{activeSummary ? `${activeSummary.sheet_name} · 结果总行数 ${activeSummary.rows.length}` : '生成后显示新的结果页'}</p>
+                  </div>
+                  <ResultActions
+                    canUseResult={Boolean(activeSummary)}
+                    copied={copied}
+                    exporting={loading === 'export'}
+                    onCopy={handleCopy}
+                    onExport={handleExport}
+                  />
+                </div>
+
+                <ExcelWorkbookFrame
+                  columns={activeSummary?.columns ?? []}
+                  rows={activeSummary?.rows ?? []}
+                  firstRowNumber={activeSummary?.header_row ?? 1}
+                  headerStyle={activeSummary?.header_style}
+                  dataStyle={activeSummary?.data_style}
+                  rowHeights={activeSummary?.row_heights}
+                  emptyText="汇总结果会显示在这里"
+                  draggableColumns={Boolean(activeSummary)}
+                  onCellChange={handleSummaryCellChange}
+                  onColumnReorder={handleSummaryColumnReorder}
+                  footer={
+                    <SheetTabs
+                      sheets={generatedSummarySheets}
+                      selectedSheet={selectedSummarySheet}
+                      disabled={false}
+                      emptyText="生成汇总后显示 sheet"
+                      onSelect={setSelectedSummarySheet}
+                    />
+                  }
+                />
+
+                {activeSummary?.warnings.length ? (
+                  <div className="warningList">
+                    {activeSummary.warnings.map((warning) => (
+                      <div key={warning}>{warning}</div>
+                    ))}
+                  </div>
+                ) : null}
+              </>
             }
           />
-
-          <div className="tableHeader resultTitle">
-            <div>
-              <Text weight="semibold">汇总结果预览</Text>
-              <p>{activeSummary ? `${activeSummary.sheet_name} · 结果总行数 ${activeSummary.rows.length}` : '生成后显示新的结果页'}</p>
-            </div>
-            <ResultActions
-              canUseResult={Boolean(activeSummary)}
-              copied={copied}
-              exporting={loading === 'export'}
-              onCopy={handleCopy}
-              onExport={handleExport}
-            />
-          </div>
-
-          <ExcelWorkbookFrame
-            columns={activeSummary?.columns ?? []}
-            rows={activeSummary?.rows ?? []}
-            firstRowNumber={activeSummary?.header_row ?? 1}
-            headerStyle={activeSummary?.header_style}
-            dataStyle={activeSummary?.data_style}
-            rowHeights={activeSummary?.row_heights}
-            emptyText="汇总结果会显示在这里"
-            draggableColumns={Boolean(activeSummary)}
-            onCellChange={handleSummaryCellChange}
-            onColumnReorder={handleSummaryColumnReorder}
-            footer={
-              <SheetTabs
-                sheets={generatedSummarySheets}
-                selectedSheet={selectedSummarySheet}
-                disabled={false}
-                emptyText="生成汇总后显示 sheet"
-                onSelect={setSelectedSummarySheet}
-              />
-            }
-          />
-
-          {activeSummary?.warnings.length ? (
-            <div className="warningList">
-              {activeSummary.warnings.map((warning) => (
-                <div key={warning}>{warning}</div>
-              ))}
-            </div>
-          ) : null}
         </section>
 
         <aside className="configPanel">
@@ -424,27 +445,36 @@ function App() {
           </div>
 
           <div className="configBody">
-            <div className="configBlock">
-              <h2>分组列</h2>
-              <p>相同组合会合并为一行</p>
-              <ColumnChecks
-                headers={preview?.headers ?? []}
-                selected={groupColumns}
-                disabled={sumColumns}
-                onToggle={toggleGroup}
-              />
-            </div>
-
-            <div className="configBlock">
-              <h2>求和列</h2>
-              <p>数量、金额等数字列会求和</p>
-              <ColumnChecks
-                headers={preview?.headers ?? []}
-                selected={sumColumns}
-                disabled={groupColumns}
-                onToggle={toggleSum}
-              />
-            </div>
+            <ResizableSplit
+              className="configSplit"
+              ariaLabel="调整分组列和求和列比例"
+              firstClassName="configBlock"
+              secondClassName="configBlock"
+              first={
+                <>
+                  <h2>分组列</h2>
+                  <p>相同组合会合并为一行</p>
+                  <ColumnChecks
+                    headers={preview?.headers ?? []}
+                    selected={groupColumns}
+                    disabled={sumColumns}
+                    onToggle={toggleGroup}
+                  />
+                </>
+              }
+              second={
+                <>
+                  <h2>求和列</h2>
+                  <p>数量、金额等数字列会求和</p>
+                  <ColumnChecks
+                    headers={preview?.headers ?? []}
+                    selected={sumColumns}
+                    disabled={groupColumns}
+                    onToggle={toggleSum}
+                  />
+                </>
+              }
+            />
           </div>
 
           <div className="configFooter">
@@ -469,6 +499,103 @@ function App() {
         onClose={closeGuide}
       />
     </main>
+  )
+}
+
+export function ResizableSplit({
+  first,
+  second,
+  ariaLabel,
+  className,
+  firstClassName,
+  secondClassName,
+  initialRatio = 0.5,
+  minRatio = 0.24,
+  maxRatio = 0.76,
+}: {
+  first: ReactNode
+  second: ReactNode
+  ariaLabel: string
+  className?: string
+  firstClassName?: string
+  secondClassName?: string
+  initialRatio?: number
+  minRatio?: number
+  maxRatio?: number
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [ratio, setRatio] = useState(() => clampRatio(initialRatio, minRatio, maxRatio))
+  const firstPercent = formatRatioPercent(ratio)
+  const secondPercent = formatRatioPercent(1 - ratio)
+
+  function setRatioFromClientY(clientY: number) {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect || rect.height <= 0) return
+    setRatio(clampRatio((clientY - rect.top) / rect.height, minRatio, maxRatio))
+  }
+
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    event.preventDefault()
+    setRatioFromClientY(event.clientY)
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      setRatioFromClientY(moveEvent.clientY)
+    }
+    const handlePointerUp = () => {
+      document.removeEventListener('pointermove', handlePointerMove)
+      document.removeEventListener('pointerup', handlePointerUp)
+      document.body.classList.remove('resizingSplit')
+    }
+
+    document.body.classList.add('resizingSplit')
+    document.addEventListener('pointermove', handlePointerMove)
+    document.addEventListener('pointerup', handlePointerUp)
+  }
+
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setRatio((current) => clampRatio(current - 0.05, minRatio, maxRatio))
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setRatio((current) => clampRatio(current + 0.05, minRatio, maxRatio))
+    }
+    if (event.key === 'Home') {
+      event.preventDefault()
+      setRatio(minRatio)
+    }
+    if (event.key === 'End') {
+      event.preventDefault()
+      setRatio(maxRatio)
+    }
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className={`resizableSplit ${className ?? ''}`}
+      style={{
+        gridTemplateRows: `minmax(0, ${firstPercent}%) 10px minmax(0, ${secondPercent}%)`,
+      }}
+    >
+      <div className={`splitPane ${firstClassName ?? ''}`}>{first}</div>
+      <div
+        className="splitHandle"
+        role="separator"
+        tabIndex={0}
+        aria-label={ariaLabel}
+        aria-orientation="horizontal"
+        aria-valuemin={Math.round(minRatio * 100)}
+        aria-valuemax={Math.round(maxRatio * 100)}
+        aria-valuenow={Math.round(ratio * 100)}
+        onPointerDown={handlePointerDown}
+        onKeyDown={handleKeyDown}
+      >
+        <span className="splitHandleGrip" />
+      </div>
+      <div className={`splitPane ${secondClassName ?? ''}`}>{second}</div>
+    </div>
   )
 }
 
@@ -671,7 +798,7 @@ function ExcelWorkbookFrame({
   headerFilters?: ColumnFilters
   filterOptionRows?: GridRow[]
   draggableColumns?: boolean
-  onHeaderFilterChange?: (column: string, value: string) => void
+  onHeaderFilterChange?: (column: string, values: string[]) => void
   onCellChange: (rowIndex: number, column: string, value: string) => void
   onColumnReorder?: (fromKey: string, toKey: string) => void
 }) {
@@ -725,23 +852,21 @@ function ExcelGrid({
   headerFilters?: ColumnFilters
   filterOptionRows?: GridRow[]
   draggableColumns?: boolean
-  onHeaderFilterChange?: (column: string, value: string) => void
+  onHeaderFilterChange?: (column: string, values: string[]) => void
   onCellChange: (rowIndex: number, column: string, value: string) => void
   onColumnReorder?: (fromKey: string, toKey: string) => void
 }) {
   const [editing, setEditing] = useState<{ rowIndex: number; column: string; value: string } | null>(null)
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
+  const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null)
   const resolvedRowIndexes = rowIndexes ?? rows.map((_, index) => index)
   const maxVisibleRowNumber = Math.max(
     firstRowNumber,
     ...resolvedRowIndexes.map((sourceIndex) => firstRowNumber + sourceIndex + 1),
   )
   const rowNumberWidth = compactRowNumberWidth(maxVisibleRowNumber)
-  const hasHeaderFilters = Boolean(onHeaderFilterChange)
   const rowsForFilterOptions = filterOptionRows ?? rows
-  const headerRowHeight = hasHeaderFilters
-    ? Math.max(rowHeights?.['1'] ?? 24, 52)
-    : rowHeights?.['1'] ?? 24
+  const headerRowHeight = rowHeights?.['1'] ?? 24
 
   if (columns.length === 0) {
     return <div className="gridEmpty">{emptyText}</div>
@@ -753,11 +878,25 @@ function ExcelGrid({
     setEditing(null)
   }
 
-  function handleColumnDrop(event: DragEvent<HTMLTableCellElement>, targetKey: string) {
+  function handleColumnDragStart(event: DragEvent<HTMLElement>, columnKey: string) {
+    if (!draggableColumns) return
+    event.dataTransfer.effectAllowed = 'move'
+    setDraggedColumn(columnKey)
+  }
+
+  function handleColumnDrop(event: DragEvent<HTMLElement>, targetKey: string) {
     event.preventDefault()
     if (!draggedColumn) return
     onColumnReorder?.(draggedColumn, targetKey)
     setDraggedColumn(null)
+  }
+
+  function handleFilterToggle(column: string, option: string, checked: boolean) {
+    const selected = headerFilters?.[column] ?? []
+    const next = checked
+      ? [...new Set([...selected, option])]
+      : selected.filter((value) => value !== option)
+    onHeaderFilterChange?.(column, next)
   }
 
   return (
@@ -773,7 +912,19 @@ function ExcelGrid({
           <tr className="columnLetters">
             <th className="cornerCell" style={{ width: `${rowNumberWidth}px` }} />
             {columns.map((column, index) => (
-              <th key={column.key}>{column.letter || excelColumnName(index + 1)}</th>
+              <th
+                key={column.key}
+                className={draggableColumns ? 'draggableColumnHeader' : undefined}
+                draggable={draggableColumns}
+                onDragStart={(event) => handleColumnDragStart(event, column.key)}
+                onDragOver={(event) => {
+                  if (draggedColumn) event.preventDefault()
+                }}
+                onDrop={(event) => handleColumnDrop(event, column.key)}
+                onDragEnd={() => setDraggedColumn(null)}
+              >
+                {column.letter || excelColumnName(index + 1)}
+              </th>
             ))}
           </tr>
           <tr style={{ height: `${headerRowHeight}px` }}>
@@ -784,11 +935,7 @@ function ExcelGrid({
                 className={draggableColumns ? 'draggableColumnHeader' : undefined}
                 draggable={draggableColumns}
                 style={styleToReact(headerStyle, '#ffffff')}
-                onDragStart={(event) => {
-                  if (!draggableColumns) return
-                  event.dataTransfer.effectAllowed = 'move'
-                  setDraggedColumn(column.key)
-                }}
+                onDragStart={(event) => handleColumnDragStart(event, column.key)}
                 onDragOver={(event) => {
                   if (draggedColumn) event.preventDefault()
                 }}
@@ -798,19 +945,15 @@ function ExcelGrid({
                 <div className="columnHeaderContent">
                   <span className="columnTitle">{column.key}</span>
                   {onHeaderFilterChange && (
-                    <select
-                      className="headerFilterSelect"
-                      value={headerFilters?.[column.key] ?? ''}
-                      aria-label={`筛选 ${column.key}`}
-                      onChange={(event) => onHeaderFilterChange(column.key, event.target.value)}
-                      onClick={(event) => event.stopPropagation()}
-                      onDoubleClick={(event) => event.stopPropagation()}
-                    >
-                      <option value="">全部</option>
-                      {filterOptionsForColumn(rowsForFilterOptions, column.key).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
+                    <HeaderFilterMenu
+                      column={column.key}
+                      options={filterOptionsForColumn(rowsForFilterOptions, column.key)}
+                      selected={headerFilters?.[column.key] ?? []}
+                      open={openFilterColumn === column.key}
+                      onOpenChange={(open) => setOpenFilterColumn(open ? column.key : null)}
+                      onToggle={handleFilterToggle}
+                      onClear={() => onHeaderFilterChange(column.key, [])}
+                    />
                   )}
                 </div>
               </th>
@@ -864,6 +1007,112 @@ function ExcelGrid({
       </table>
     </div>
   )
+}
+
+export function HeaderFilterMenu({
+  column,
+  options,
+  selected,
+  selectedValues,
+  open,
+  onOpenChange,
+  onToggle,
+  onClear,
+  onChange,
+}: {
+  column: string
+  options: string[]
+  selected?: string[]
+  selectedValues?: string[]
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  onToggle?: (column: string, option: string, checked: boolean) => void
+  onClear?: () => void
+  onChange?: (values: string[]) => void
+}) {
+  const [localOpen, setLocalOpen] = useState(false)
+  const rootRef = useRef<HTMLSpanElement>(null)
+  const isOpen = open ?? localOpen
+  const selectedItems = selected ?? selectedValues ?? []
+
+  function setOpen(nextOpen: boolean) {
+    onOpenChange?.(nextOpen)
+    if (open === undefined) setLocalOpen(nextOpen)
+  }
+
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (target instanceof Node && rootRef.current?.contains(target)) return
+      onOpenChange?.(false)
+      if (open === undefined) setLocalOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handleOutsidePointerDown)
+    return () => document.removeEventListener('pointerdown', handleOutsidePointerDown)
+  }, [isOpen, onOpenChange, open])
+
+  function toggleOption(option: string, checked: boolean) {
+    const next = checked
+      ? [...new Set([...selectedItems, option])]
+      : selectedItems.filter((value) => value !== option)
+    onChange?.(next)
+    onToggle?.(column, option, checked)
+  }
+
+  function clearFilter() {
+    onChange?.([])
+    onClear?.()
+  }
+
+  return (
+    <span ref={rootRef} className="headerFilterWrap" onClick={(event) => event.stopPropagation()}>
+      <button
+        type="button"
+        className={`filterMenuButton headerFilterButton ${selectedItems.length > 0 ? 'active' : ''}`}
+        aria-label={`筛选 ${column}`}
+        onClick={() => setOpen(!isOpen)}
+      >
+        <Filter16Regular />
+        {selectedItems.length > 0 && <span className="filterCount">{selectedItems.length}</span>}
+      </button>
+      {isOpen && (
+        <div
+          className="headerFilterMenu"
+          onDoubleClick={(event) => event.stopPropagation()}
+          onWheel={(event) => event.stopPropagation()}
+        >
+          <div className="filterMenuTop">
+            <span>{column}</span>
+            <button type="button" onClick={clearFilter}>清除</button>
+          </div>
+          <div className="filterOptionList">
+            {options.map((option) => (
+              <label key={option} className="filterOption">
+                <input
+                  type="checkbox"
+                  checked={selectedItems.includes(option)}
+                  onChange={(event) => toggleOption(option, event.target.checked)}
+                />
+                <span>{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </span>
+  )
+}
+
+function clampRatio(value: number, minRatio: number, maxRatio: number) {
+  return Math.min(maxRatio, Math.max(minRatio, value))
+}
+
+function formatRatioPercent(value: number) {
+  const percent = Number((value * 100).toFixed(1))
+  return Number.isInteger(percent) ? `${percent}` : `${percent}`
 }
 
 function styleToReact(style?: CellStyle, fallbackBackground?: string): CSSProperties {

@@ -115,9 +115,7 @@
 .configBody {
   flex: 1 1 auto;
   min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
+  display: block;
   overflow: hidden;
   padding-right: 2px;
 }
@@ -143,8 +141,87 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   overflow: hidden;
+}
+
+.resizableSplit {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  overflow: hidden;
+}
+
+.splitPane {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.previewSplit,
+.configSplit {
+  height: 100%;
+}
+
+.previewPane {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.previewPane .workbookFrame {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.splitHandle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10px;
+  cursor: row-resize;
+  outline: none;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+}
+
+.splitHandle::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 1px;
+  background: #dde2df;
+}
+
+.splitHandleGrip {
+  position: relative;
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: #c8d0cc;
+  box-shadow: 0 1px 0 #ffffff;
+  transition: background-color 120ms ease, width 120ms ease;
+}
+
+.splitHandle:hover .splitHandleGrip,
+.splitHandle:focus-visible .splitHandleGrip,
+.resizingSplit .splitHandleGrip {
+  width: 56px;
+  background: #107c41;
+}
+
+.splitHandle:focus-visible {
+  box-shadow: inset 0 0 0 1px #107c41;
+}
+
+.resizingSplit {
+  cursor: row-resize;
+  user-select: none;
 }
 
 .tableHeader {
@@ -210,6 +287,10 @@
   text-overflow: ellipsis;
   border: 1px solid #d9d9d9;
   background-clip: padding-box;
+}
+
+.excelGrid thead th {
+  overflow: visible;
 }
 
 .columnLetters th,
@@ -366,11 +447,14 @@
 }
 
 .configBlock {
-  border-top: 1px solid #edf0ee;
-  padding-top: 12px;
+  padding-top: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.configSplit .splitHandle {
+  margin: 3px 0;
 }
 
 .configBlock h2 {
@@ -426,10 +510,12 @@
 
 .columnHeaderContent {
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
+  max-width: 100%;
 }
 
 .columnTitle {
@@ -437,25 +523,121 @@
   text-overflow: ellipsis;
 }
 
-.headerFilterSelect {
-  width: 100%;
-  min-width: 0;
-  height: 21px;
-  box-sizing: border-box;
-  border: 1px solid #d0d7d3;
-  border-radius: 3px;
-  padding: 1px 4px;
-  color: #242424;
-  background: #ffffff;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 400;
-  outline: none;
+.headerFilterWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
 }
 
-.headerFilterSelect:focus {
+.headerFilterButton {
+  width: 18px;
+  height: 18px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #616161;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.headerFilterButton:hover,
+.headerFilterButton.active {
+  color: #107c41;
+  border-color: #9ac7aa;
+  background: #f4fbf6;
+}
+
+.headerFilterButton svg {
+  width: 13px;
+  height: 13px;
+}
+
+.filterCount {
+  position: absolute;
+  min-width: 11px;
+  height: 11px;
+  right: -4px;
+  top: -5px;
+  border-radius: 999px;
+  background: #107c41;
+  color: #ffffff;
+  font-size: 8px;
+  line-height: 11px;
+  text-align: center;
+}
+
+.headerFilterMenu {
+  position: absolute;
+  top: 22px;
+  right: 0;
+  width: 184px;
+  max-height: min(320px, 45vh);
+  z-index: 40;
+  padding: 8px;
+  overflow: hidden;
+  border: 1px solid #cfd5d2;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+  color: #242424;
+  text-align: left;
+}
+
+.filterMenuTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #edf0ee;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.filterMenuTop button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #107c41;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.filterOptionList {
+  max-height: min(260px, 38vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: 6px;
+}
+
+.filterOption {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.filterOption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filterOption input {
+  width: 13px;
+  height: 13px;
+  accent-color: #107c41;
+}
+
+.headerFilterButton:focus-visible {
   border-color: #107c41;
-  box-shadow: inset 0 0 0 1px #107c41;
+  outline: 1px solid #107c41;
+  outline-offset: 1px;
 }
 
 .draggableColumnHeader {

@@ -16,4 +16,7 @@ ExcelEditTool - 测试说明
 注意：
 - 当前版本优先支持 .xlsx。
 - 如果 Windows 首次启动提示安全拦截，请选择“仍要运行”。
-- 如果窗口无法打开，请确认系统已安装 Microsoft Edge WebView2 Runtime。
+- 安装包默认安装到 D:\ExcelEditTool；如果当前电脑没有 D 盘，则回退到当前用户的本地程序目录。
+- 推荐使用 ExcelEditTool_Setup.exe 安装包；安装时会自动检测 Microsoft Edge WebView2 Runtime，缺失时会调用 Microsoft 官方 Bootstrapper 静默安装。
+- 如果使用 zip 免安装版，仍依赖系统已安装 WebView2 Runtime；Windows 11 和较新的 Windows 10 通常已自带。
+- 当前安装包随附的是 WebView2 Evergreen Bootstrapper，首次安装缺少 Runtime 时需要联网下载运行时。若要完全离线分发，可改为随包附带 Evergreen Standalone Installer，安装包体积会明显变大。

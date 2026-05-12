@@ -9,13 +9,21 @@ venv/
 # Node
 node_modules/
 .vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Build outputs
 dist/
 build/
 release/
+frontend/dist/
+frontend/dist-ssr/
+ExcelEditTool.spec
 
 # IDE
+.claude/
 .vscode/
 .idea/
 
@@ -29,3 +37,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Downloaded installer payloads
+packaging/MicrosoftEdgeWebView2Setup.exe

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@fluentui/react-components', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@fluentui/react-components')>()
@@ -29,8 +29,11 @@ import {
   HeaderFilterMenu,
   HeaderRowControl,
   ResultActions,
+  ResizableSplit,
   SheetTabs,
 } from './App'
+
+afterEach(() => cleanup())
 
 describe('Excel-like layout refinements', () => {
   it('renders a compact inline header row control', () => {
@@ -118,5 +121,70 @@ describe('Excel-like layout refinements', () => {
     expect(screen.getByRole('checkbox', { name: 'A-100' })).toBeChecked()
     fireEvent.click(screen.getByRole('checkbox', { name: 'B-200' }))
     expect(onChange).toHaveBeenCalledWith(['A-100', 'B-200'])
+  })
+
+  it('closes the filter menu when clicking outside', () => {
+    render(
+      <HeaderFilterMenu
+        column="型号"
+        options={['A-100']}
+        selectedValues={[]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '筛选 型号' }))
+    expect(screen.getByRole('checkbox', { name: 'A-100' })).toBeInTheDocument()
+
+    fireEvent.pointerDown(document.body)
+    expect(screen.queryByRole('checkbox', { name: 'A-100' })).not.toBeInTheDocument()
+  })
+
+  it('renders a draggable split handle for resizable panes', () => {
+    const { container } = render(
+      <ResizableSplit
+        ariaLabel="调整预览区域比例"
+        first={<div>原始数据预览</div>}
+        second={<div>汇总结果预览</div>}
+      />,
+    )
+
+    expect(screen.getByText('原始数据预览')).toBeInTheDocument()
+    expect(screen.getByText('汇总结果预览')).toBeInTheDocument()
+    expect(screen.getByRole('separator', { name: '调整预览区域比例' })).toBeInTheDocument()
+    expect(container.querySelector('.resizableSplit')).toHaveStyle({
+      gridTemplateRows: 'minmax(0, 50%) 10px minmax(0, 50%)',
+    })
+  })
+
+  it('updates the split ratio while dragging the handle', () => {
+    const { container } = render(
+      <ResizableSplit
+        ariaLabel="调整分组列和求和列比例"
+        first={<div>分组列</div>}
+        second={<div>求和列</div>}
+      />,
+    )
+    const split = container.querySelector('.resizableSplit') as HTMLElement
+    split.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 300,
+      bottom: 400,
+      width: 300,
+      height: 400,
+      toJSON: () => ({}),
+    })
+
+    const handle = screen.getByRole('separator', { name: '调整分组列和求和列比例' })
+    fireEvent.pointerDown(handle, { clientY: 200 })
+    fireEvent.pointerMove(document, { clientY: 300 })
+    fireEvent.pointerUp(document)
+
+    expect(split).toHaveStyle({
+      gridTemplateRows: 'minmax(0, 75%) 10px minmax(0, 25%)',
+    })
   })
 })
