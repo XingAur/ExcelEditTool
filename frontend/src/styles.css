@@ -1,0 +1,482 @@
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: #242424;
+  overflow: hidden;
+}
+
+.commandBar {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid #dfe3e1;
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #217346;
+  box-shadow: 0 8px 18px rgba(33, 115, 70, 0.18);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.brand p,
+.tableHeader p,
+.configBlock p {
+  margin: 3px 0 0;
+  color: #616161;
+  font-size: 12px;
+}
+
+.commandActions,
+.resultActions,
+.headerRowControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.message {
+  margin: 10px 16px 0;
+  padding: 8px 11px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.errorMessage {
+  color: #a4262c;
+  background: #fde7e9;
+  border: 1px solid #f3b6bb;
+  align-items: flex-start;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  max-height: calc(1.45em * 5 + 18px);
+  overflow: auto;
+}
+
+.statusMessage {
+  color: #24533c;
+  background: #eef7f0;
+  border: 1px solid #cfe8d5;
+}
+
+.workspace {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(760px, 1fr) 292px;
+  gap: 14px;
+  padding: 14px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.configPanel {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #dfe3e1;
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 0;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.configBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
+  padding-right: 2px;
+}
+
+.configFooter {
+  flex: 0 0 auto;
+  padding-top: 12px;
+  border-top: 1px solid #edf0ee;
+  background: #ffffff;
+}
+
+.panelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #217346;
+  font-weight: 650;
+  font-size: 14px;
+}
+
+.gridArea {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.tableHeader {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.headerRowControl {
+  align-items: center;
+  color: #424242;
+  font-size: 13px;
+}
+
+.headerRowInput {
+  width: 58px;
+}
+
+.headerRowInput input {
+  text-align: center;
+}
+
+.workbookFrame {
+  flex: 1 1 0;
+  display: flex;
+  min-height: 246px;
+  flex-direction: column;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #cfd5d2;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+.excelFrame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.excelGrid {
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 100%;
+  font-size: 12px;
+  background: #ffffff;
+}
+
+.rowNumberColumn {
+  width: 18px;
+}
+
+.excelGrid th,
+.excelGrid td {
+  min-width: 64px;
+  padding: 3px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid #d9d9d9;
+  background-clip: padding-box;
+}
+
+.columnLetters th,
+.rowHeader,
+.cornerCell {
+  background: #f3f3f3;
+  color: #444444;
+  font-weight: 400;
+  text-align: center;
+  border-color: #d0d0d0;
+  background-clip: padding-box;
+}
+
+.columnLetters th {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  height: 20px;
+  padding: 1px 4px;
+  font-size: 11px;
+  box-shadow: 0 1px 0 #d0d0d0;
+}
+
+.excelGrid .cornerCell {
+  left: 0;
+  z-index: 8;
+  min-width: 0;
+  width: 18px;
+  padding: 0;
+}
+
+.excelGrid .rowHeader {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  width: 18px;
+  min-width: 0;
+  padding: 1px;
+  font-size: 10.5px;
+}
+
+.excelGrid thead tr:nth-child(2) th:not(.rowHeader) {
+  position: sticky;
+  top: 20px;
+  z-index: 6;
+  font-weight: 650;
+  background-clip: padding-box;
+  box-shadow: 0 2px 0 #d9d9d9, 0 5px 10px rgba(255, 255, 255, 0.94);
+}
+
+.excelGrid thead tr:nth-child(2) .rowHeader {
+  top: 20px;
+  z-index: 7;
+  box-shadow: 0 2px 0 #d9d9d9, 0 5px 10px rgba(255, 255, 255, 0.94);
+}
+
+.excelGrid td {
+  color: #111111;
+}
+
+.editingCell {
+  padding: 0 !important;
+  outline: 2px solid #107c41;
+  outline-offset: -2px;
+}
+
+.cellEditor {
+  width: 100%;
+  height: 100%;
+  min-height: 24px;
+  border: 0;
+  padding: 3px 6px;
+  background: #ffffff;
+  color: #111111;
+  outline: none;
+  font: inherit;
+}
+
+.gridEmpty {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  color: #707070;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    repeating-linear-gradient(90deg, #f8f8f8 0 80px, #eeeeee 80px 81px);
+  font-size: 13px;
+}
+
+.sheetTabBar {
+  min-height: 33px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px 8px 0;
+  background: #f3f3f3;
+  border-top: 1px solid #d0d0d0;
+  overflow-x: auto;
+}
+
+.sheetTab {
+  height: 29px;
+  min-width: 76px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  color: #242424;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.sheetTab:hover:not(:disabled) {
+  background: #ffffff;
+}
+
+.sheetTab.active {
+  background: #ffffff;
+  color: #107c41;
+  border-color: #d0d0d0;
+  border-top: 2px solid #107c41;
+  font-weight: 650;
+}
+
+.sheetTab:disabled {
+  cursor: default;
+}
+
+.sheetTabAdd,
+.sheetTabHint {
+  height: 29px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #6b6b6b;
+  font-size: 13px;
+}
+
+.resultTabBar .sheetTab {
+  min-width: 92px;
+}
+
+.resultTitle {
+  margin-top: 4px;
+}
+
+.copied {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #107c41;
+  font-size: 13px;
+}
+
+.configBlock {
+  border-top: 1px solid #edf0ee;
+  padding-top: 12px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.configBlock h2 {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 650;
+}
+
+.checkList {
+  margin-top: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.generateButton {
+  width: 100%;
+}
+
+.exportButton.ready {
+  background: #107c41;
+  border-color: #107c41;
+  color: #ffffff;
+}
+
+.exportButton.ready:hover {
+  background: #0b6a37;
+  border-color: #0b6a37;
+}
+
+.emptyState {
+  color: #707070;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.warningList {
+  padding: 9px 11px;
+  color: #8a5a00;
+  background: #fff8e8;
+  border: 1px solid #f4d99b;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  max-height: calc(1.45em * 5 + 20px);
+  overflow: auto;
+}
+
+.columnHeaderContent {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.columnTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerFilterSelect {
+  width: 100%;
+  min-width: 0;
+  height: 21px;
+  box-sizing: border-box;
+  border: 1px solid #d0d7d3;
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: #242424;
+  background: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 400;
+  outline: none;
+}
+
+.headerFilterSelect:focus {
+  border-color: #107c41;
+  box-shadow: inset 0 0 0 1px #107c41;
+}
+
+.draggableColumnHeader {
+  cursor: grab;
+}
+
+.draggableColumnHeader:active {
+  cursor: grabbing;
+}
+
+.guideSurface {
+  border-radius: 8px;
+}
+
+.guideContent {
+  color: #424242;
+}
+
+.guideContent ol {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  line-height: 1.8;
+  font-size: 13px;
+}

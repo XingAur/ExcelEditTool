@@ -1,0 +1,38 @@
+:root {
+  font-family:
+    "Aptos",
+    "Segoe UI",
+    "Microsoft YaHei UI",
+    "Microsoft YaHei",
+    system-ui,
+    sans-serif;
+  color: #242424;
+  background: #f5f6f7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1120px;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #fbfbfb 0%, #f4f6f5 52%, #eef2ef 100%);
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+button,
+input {
+  font: inherit;
+}
