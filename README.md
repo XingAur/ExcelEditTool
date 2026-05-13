@@ -1,83 +1,42 @@
 # ExcelEditTool
 
-ExcelEditTool 是一个本地 Excel 汇总处理工具。当前版本只保留 Tauri 桌面客户端，Excel 读取、预览、筛选、汇总和导出都在本机完成，不再包含 Python 后端、pywebview 或 PyInstaller 打包链。
+ExcelEditTool 是一款 Windows 桌面端 Excel 汇总工具，面向日常表格整理、物料清单汇总、财务明细合并等场景。它可以在本机读取 `.xlsx` 文件，预览原始数据，按指定字段分组，并对数量、金额等列自动求和。
 
-## 功能
+## 产品特点
 
-- 选择本地 `.xlsx` 文件并预览原始数据。
-- 支持多个 sheet 切换，每个 sheet 可独立生成汇总结果。
-- 支持自定义表头行、分组列、求和列。
-- 原始数据支持表头下拉多选过滤，汇总时使用过滤后的数据。
-- 原始数据和汇总结果支持双击单元格编辑。
-- 汇总结果支持拖拽调整列顺序，复制和导出会按调整后的顺序输出。
-- 支持带格式复制汇总结果到 Excel。
-- 导出文件命名规则：`原Excel文件名_汇总.xlsx`。
+- 本地处理 Excel 文件，适合处理日常工作表和多 sheet 表格。
+- 支持选择表头行，适配不同格式的原始表。
+- 支持按多个字段分组，例如规格型号、单位、单价等。
+- 支持对多个数字列求和，例如数量、金额等。
+- 原始数据支持表头下拉多选过滤，汇总只基于过滤后的数据。
+- 原始数据和汇总结果都支持双击编辑单元格。
+- 汇总结果支持拖拽调整列顺序。
+- 支持将汇总结果带格式复制到 Excel。
+- 支持导出新的 `.xlsx` 文件，默认命名为 `原Excel文件名_汇总.xlsx`。
 
-## 下载
+## 使用流程
+
+1. 打开 ExcelEditTool。
+2. 选择本地 `.xlsx` 文件。
+3. 根据实际表格设置表头行。
+4. 选择分组列和求和列。
+5. 如有需要，在原始数据预览中使用表头筛选或直接编辑单元格。
+6. 点击“生成汇总”查看结果。
+7. 复制结果到 Excel，或导出为新的 `.xlsx` 文件。
+
+## 下载与安装
 
 Windows 安装包请到 GitHub Releases 下载：
 
 - [Latest Release](https://github.com/XingAur/ExcelEditTool/releases/latest)
 - 安装包文件名：`ExcelEditTool_Tauri_Setup.exe`
 
-当前安装包配置：
+安装信息：
 
 - 默认安装目录：`D:\Programs\ExcelEditTool`
-- 安装完成后不自动启动程序
-- 不随包携带 Python 或固定版 WebView2 Runtime
-- 不在安装时下载或更新 WebView2，依赖系统已有 Microsoft Edge WebView2 Runtime
+- 安装完成后可从开始菜单或桌面快捷方式启动
+- 运行环境：Windows 10/11，系统需具备 Microsoft Edge WebView2 Runtime
 
-## 技术栈
+## 截图
 
-- React + TypeScript + Vite
-- Fluent UI React v9
-- ExcelJS
-- Tauri 2
-- Vitest + ESLint
-
-## 目录
-
-```text
-frontend/                 React 前端与 Tauri 客户端
-frontend/src/             Excel 处理和界面代码
-frontend/src-tauri/       Tauri 配置、Rust 入口和 NSIS 安装器模板
-scripts/package_tauri_client.ps1
-```
-
-## 开发
-
-```powershell
-cd frontend
-npm install
-npm run dev -- --host 127.0.0.1 --port 5173
-```
-
-启动 Tauri 开发客户端：
-
-```powershell
-cd frontend
-npm run tauri
-```
-
-## 验证
-
-```powershell
-cd frontend
-npm test
-npm run lint
-npm run build
-```
-
-## 打包
-
-在项目根目录运行：
-
-```powershell
-.\scripts\package_tauri_client.ps1
-```
-
-输出文件：
-
-```text
-release\ExcelEditTool_Tauri_Setup.exe
-```
+当前界面以类 Excel 的上下分栏方式展示原始数据和汇总结果，右侧提供分组列、求和列与生成操作。
