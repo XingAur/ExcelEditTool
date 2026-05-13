@@ -6,7 +6,7 @@ import type {
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
   Checkbox,
@@ -56,6 +56,10 @@ type SummaryStore = Record<string, SummaryResult>
 type FilterStore = Record<string, ColumnFilters>
 const GUIDE_STORAGE_KEY = 'excel-edit-tool-guide-hidden'
 const EMPTY_FILTERS: ColumnFilters = {}
+const FILTER_MENU_WIDTH = 224
+const FILTER_MENU_MAX_HEIGHT = 320
+const FILTER_MENU_MARGIN = 8
+const FILTER_MENU_GAP = 6
 
 function App() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -1031,9 +1035,32 @@ export function HeaderFilterMenu({
   onChange?: (values: string[]) => void
 }) {
   const [localOpen, setLocalOpen] = useState(false)
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({})
   const rootRef = useRef<HTMLSpanElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const isOpen = open ?? localOpen
   const selectedItems = selected ?? selectedValues ?? []
+
+  const updateMenuPosition = useCallback(() => {
+    const buttonRect = buttonRef.current?.getBoundingClientRect()
+    if (!buttonRect) return
+
+    const width = Math.min(FILTER_MENU_WIDTH, window.innerWidth - FILTER_MENU_MARGIN * 2)
+    const maxHeight = Math.min(FILTER_MENU_MAX_HEIGHT, window.innerHeight * 0.45)
+    const centeredLeft = buttonRect.left + buttonRect.width / 2 - width / 2
+    const left = clampNumber(centeredLeft, FILTER_MENU_MARGIN, window.innerWidth - width - FILTER_MENU_MARGIN)
+    const belowTop = buttonRect.bottom + FILTER_MENU_GAP
+    const opensAbove = belowTop + maxHeight > window.innerHeight - FILTER_MENU_MARGIN && buttonRect.top > maxHeight
+    const top = opensAbove
+      ? Math.max(FILTER_MENU_MARGIN, buttonRect.top - maxHeight - FILTER_MENU_GAP)
+      : Math.min(belowTop, window.innerHeight - FILTER_MENU_MARGIN)
+
+    setMenuStyle({
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${width}px`,
+    })
+  }, [])
 
   function setOpen(nextOpen: boolean) {
     onOpenChange?.(nextOpen)
@@ -1054,6 +1081,18 @@ export function HeaderFilterMenu({
     return () => document.removeEventListener('pointerdown', handleOutsidePointerDown)
   }, [isOpen, onOpenChange, open])
 
+  useLayoutEffect(() => {
+    if (!isOpen) return undefined
+
+    updateMenuPosition()
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
+    }
+  }, [isOpen, updateMenuPosition])
+
   function toggleOption(option: string, checked: boolean) {
     const next = checked
       ? [...new Set([...selectedItems, option])]
@@ -1070,6 +1109,7 @@ export function HeaderFilterMenu({
   return (
     <span ref={rootRef} className="headerFilterWrap" onClick={(event) => event.stopPropagation()}>
       <button
+        ref={buttonRef}
         type="button"
         className={`filterMenuButton headerFilterButton ${selectedItems.length > 0 ? 'active' : ''}`}
         aria-label={`筛选 ${column}`}
@@ -1081,6 +1121,7 @@ export function HeaderFilterMenu({
       {isOpen && (
         <div
           className="headerFilterMenu"
+          style={menuStyle}
           onDoubleClick={(event) => event.stopPropagation()}
           onWheel={(event) => event.stopPropagation()}
         >
@@ -1104,6 +1145,10 @@ export function HeaderFilterMenu({
       )}
     </span>
   )
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }
 
 function clampRatio(value: number, minRatio: number, maxRatio: number) {

@@ -570,11 +570,9 @@
 }
 
 .headerFilterMenu {
-  position: absolute;
-  top: 22px;
-  right: 0;
-  width: 184px;
-  max-height: min(320px, 45vh);
+  position: fixed;
+  max-width: calc(100vw - 16px);
+  max-height: min(320px, calc(100vh - 16px));
   z-index: 40;
   padding: 8px;
   overflow: hidden;
@@ -597,7 +595,15 @@
   font-weight: 650;
 }
 
+.filterMenuTop span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .filterMenuTop button {
+  flex: 0 0 auto;
   border: 0;
   padding: 0;
   background: transparent;
@@ -616,21 +622,26 @@
 .filterOption {
   min-height: 24px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
+  padding: 3px 2px;
+  line-height: 1.35;
   font-size: 12px;
   font-weight: 400;
-  white-space: nowrap;
 }
 
 .filterOption span {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .filterOption input {
+  flex: 0 0 auto;
   width: 13px;
   height: 13px;
+  margin-top: 1px;
   accent-color: #107c41;
 }
 

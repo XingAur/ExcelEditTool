@@ -1,26 +1,31 @@
-# Python
-__pycache__/
-.pytest_cache/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-
-# Node
+# Dependencies
 node_modules/
-.vite/
+frontend/node_modules/
+
+# Frontend build outputs
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+
+# Tauri/Rust generated outputs
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+
+# Packaged release artifacts
+release/
+
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Build outputs
-dist/
-build/
-release/
-frontend/dist/
-frontend/dist-ssr/
-ExcelEditTool.spec
+# Environment
+.env
+.env.*
+*.local
 
 # IDE
 .claude/
@@ -30,13 +35,3 @@ ExcelEditTool.spec
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-
-# Environment
-.env
-.env.local
-
-# Downloaded installer payloads
-packaging/MicrosoftEdgeWebView2Setup.exe

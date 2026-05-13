@@ -123,6 +123,36 @@ describe('Excel-like layout refinements', () => {
     expect(onChange).toHaveBeenCalledWith(['A-100', 'B-200'])
   })
 
+  it('keeps a left-edge filter menu inside the viewport', () => {
+    const { container } = render(
+      <HeaderFilterMenu
+        column="鍨嬪彿"
+        options={['A-100']}
+        selectedValues={[]}
+        onChange={vi.fn()}
+      />,
+    )
+    const button = container.querySelector('.filterMenuButton') as HTMLButtonElement
+    button.getBoundingClientRect = () => ({
+      x: 4,
+      y: 2,
+      top: 2,
+      left: 4,
+      right: 22,
+      bottom: 20,
+      width: 18,
+      height: 18,
+      toJSON: () => ({}),
+    })
+
+    fireEvent.click(button)
+
+    const menu = container.querySelector('.headerFilterMenu') as HTMLElement
+    expect(menu.style.left).toBe('8px')
+    expect(menu.style.top).toBe('26px')
+    expect(menu.style.width).toBe('224px')
+  })
+
   it('closes the filter menu when clicking outside', () => {
     render(
       <HeaderFilterMenu
