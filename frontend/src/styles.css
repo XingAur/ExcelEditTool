@@ -653,9 +653,12 @@
 
 .draggableColumnHeader {
   cursor: grab;
+  user-select: none;
+  touch-action: none;
 }
 
-.draggableColumnHeader:active {
+.draggableColumnHeader:active,
+.draggingColumnHeader {
   cursor: grabbing;
 }
 

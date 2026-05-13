@@ -863,6 +863,7 @@ function ExcelGrid({
   const [editing, setEditing] = useState<{ rowIndex: number; column: string; value: string } | null>(null)
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
   const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null)
+  const draggedColumnRef = useRef<string | null>(null)
   const resolvedRowIndexes = rowIndexes ?? rows.map((_, index) => index)
   const maxVisibleRowNumber = Math.max(
     firstRowNumber,
@@ -885,14 +886,55 @@ function ExcelGrid({
   function handleColumnDragStart(event: DragEvent<HTMLElement>, columnKey: string) {
     if (!draggableColumns) return
     event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', columnKey)
+    draggedColumnRef.current = columnKey
     setDraggedColumn(columnKey)
+  }
+
+  function handleColumnDragOver(event: DragEvent<HTMLElement>) {
+    if (!draggableColumns) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
   }
 
   function handleColumnDrop(event: DragEvent<HTMLElement>, targetKey: string) {
     event.preventDefault()
-    if (!draggedColumn) return
-    onColumnReorder?.(draggedColumn, targetKey)
+    const sourceKey = draggedColumnRef.current || draggedColumn || event.dataTransfer.getData('text/plain')
+    if (sourceKey && sourceKey !== targetKey) onColumnReorder?.(sourceKey, targetKey)
+    clearDraggedColumn()
+  }
+
+  function handleColumnPointerDown(event: ReactPointerEvent<HTMLElement>, columnKey: string) {
+    if (!draggableColumns || event.button !== 0) return
+    const target = event.target
+    if (target instanceof HTMLElement && target.closest('button,input,label')) return
+    draggedColumnRef.current = columnKey
+    setDraggedColumn(columnKey)
+  }
+
+  function handleColumnPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    if (!draggedColumnRef.current) return
+    event.preventDefault()
+  }
+
+  function handleColumnPointerUp(event: ReactPointerEvent<HTMLElement>, targetKey: string) {
+    const sourceKey = draggedColumnRef.current
+    if (!sourceKey) return
+    event.preventDefault()
+    if (sourceKey !== targetKey) onColumnReorder?.(sourceKey, targetKey)
+    clearDraggedColumn()
+  }
+
+  function clearDraggedColumn() {
+    draggedColumnRef.current = null
     setDraggedColumn(null)
+  }
+
+  function columnHeaderClassName(columnKey: string) {
+    const classes = []
+    if (draggableColumns) classes.push('draggableColumnHeader')
+    if (draggedColumn === columnKey) classes.push('draggingColumnHeader')
+    return classes.join(' ') || undefined
   }
 
   function handleFilterToggle(column: string, option: string, checked: boolean) {
@@ -918,14 +960,15 @@ function ExcelGrid({
             {columns.map((column, index) => (
               <th
                 key={column.key}
-                className={draggableColumns ? 'draggableColumnHeader' : undefined}
-                draggable={draggableColumns}
+                className={columnHeaderClassName(column.key)}
                 onDragStart={(event) => handleColumnDragStart(event, column.key)}
-                onDragOver={(event) => {
-                  if (draggedColumn) event.preventDefault()
-                }}
+                onDragOver={handleColumnDragOver}
                 onDrop={(event) => handleColumnDrop(event, column.key)}
-                onDragEnd={() => setDraggedColumn(null)}
+                onDragEnd={clearDraggedColumn}
+                onPointerDown={(event) => handleColumnPointerDown(event, column.key)}
+                onPointerMove={handleColumnPointerMove}
+                onPointerUp={(event) => handleColumnPointerUp(event, column.key)}
+                onPointerCancel={clearDraggedColumn}
               >
                 {column.letter || excelColumnName(index + 1)}
               </th>
@@ -936,15 +979,16 @@ function ExcelGrid({
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={draggableColumns ? 'draggableColumnHeader' : undefined}
-                draggable={draggableColumns}
+                className={columnHeaderClassName(column.key)}
                 style={styleToReact(headerStyle, '#ffffff')}
                 onDragStart={(event) => handleColumnDragStart(event, column.key)}
-                onDragOver={(event) => {
-                  if (draggedColumn) event.preventDefault()
-                }}
+                onDragOver={handleColumnDragOver}
                 onDrop={(event) => handleColumnDrop(event, column.key)}
-                onDragEnd={() => setDraggedColumn(null)}
+                onDragEnd={clearDraggedColumn}
+                onPointerDown={(event) => handleColumnPointerDown(event, column.key)}
+                onPointerMove={handleColumnPointerMove}
+                onPointerUp={(event) => handleColumnPointerUp(event, column.key)}
+                onPointerCancel={clearDraggedColumn}
               >
                 <div className="columnHeaderContent">
                   <span className="columnTitle">{column.key}</span>

@@ -1,7 +1,39 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const preview = {
+  file_name: 'sample.xlsx',
+  sheets: ['Sheet1'],
+  sheet_name: 'Sheet1',
+  header_row: 1,
+  headers: ['Model', 'Amount'],
+  rows: [
+    { Model: 'A-100', Amount: 10 },
+    { Model: 'A-100', Amount: 5 },
+  ],
+  columns: [
+    { key: 'Model', index: 1, letter: 'A', width: 12, width_px: 100, style: {} },
+    { key: 'Amount', index: 2, letter: 'B', width: 12, width_px: 100, style: {} },
+  ],
+  row_heights: {},
+  header_style: {},
+  data_style: {},
+}
+
+vi.mock('./api', () => ({
+  uploadWorkbook: vi.fn(async () => ({
+    fileId: 'file-1',
+    fileName: 'sample.xlsx',
+    sheets: ['Sheet1'],
+    preview,
+  })),
+  fetchPreview: vi.fn(async () => preview),
+  exportSummaryResults: vi.fn(),
+  fetchGuidePreference: vi.fn(async () => ({ guideHidden: true })),
+  saveGuidePreference: vi.fn(async (guideHidden: boolean) => ({ guideHidden })),
+}))
 
 vi.mock('@fluentui/react-components', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@fluentui/react-components')>()
@@ -24,7 +56,7 @@ vi.mock('@fluentui/react-components', async (importOriginal) => {
 })
 
 import { FluentProvider, webLightTheme } from '@fluentui/react-components'
-import {
+import App, {
   GuideDialog,
   HeaderFilterMenu,
   HeaderRowControl,
@@ -215,6 +247,94 @@ describe('Excel-like layout refinements', () => {
 
     expect(split).toHaveStyle({
       gridTemplateRows: 'minmax(0, 75%) 10px minmax(0, 25%)',
+    })
+  })
+
+  it('writes drag data when reordering summary columns', async () => {
+    const { container } = render(
+      <FluentProvider theme={webLightTheme}>
+        <App />
+      </FluentProvider>,
+    )
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(fileInput, {
+      target: {
+        files: [
+          new File(['x'], 'sample.xlsx', {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          }),
+        ],
+      },
+    })
+
+    await waitFor(() => expect(screen.getAllByRole('checkbox', { name: 'Model' }).length).toBeGreaterThan(1))
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Model' })[0])
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Amount' })[1])
+    fireEvent.click(container.querySelector('.generateButton') as HTMLButtonElement)
+
+    await waitFor(() => expect(container.querySelectorAll('.workbookFrame')).toHaveLength(2))
+    const summaryFrame = container.querySelectorAll('.workbookFrame')[1]
+    const summaryHeaders = summaryFrame.querySelectorAll('thead tr:nth-child(2) th')
+    const modelHeader = summaryHeaders[1] as HTMLTableCellElement
+    const amountHeader = summaryHeaders[2] as HTMLTableCellElement
+    const dataTransfer = {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: vi.fn(),
+      getData: vi.fn(() => 'Amount'),
+    }
+
+    fireEvent.dragStart(amountHeader, { dataTransfer })
+
+    expect(dataTransfer.setData).toHaveBeenCalledWith('text/plain', 'Amount')
+    fireEvent.dragOver(modelHeader, { dataTransfer })
+    fireEvent.drop(modelHeader, { dataTransfer })
+
+    await waitFor(() => {
+      const reorderedHeaders = Array.from(summaryFrame.querySelectorAll('thead tr:nth-child(2) th'))
+        .slice(1)
+        .map((header) => header.textContent)
+      expect(reorderedHeaders).toEqual(['Amount', 'Model'])
+    })
+  })
+
+  it('reorders summary columns with pointer drag gestures', async () => {
+    const { container } = render(
+      <FluentProvider theme={webLightTheme}>
+        <App />
+      </FluentProvider>,
+    )
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(fileInput, {
+      target: {
+        files: [
+          new File(['x'], 'sample.xlsx', {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          }),
+        ],
+      },
+    })
+
+    await waitFor(() => expect(screen.getAllByRole('checkbox', { name: 'Model' }).length).toBeGreaterThan(1))
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Model' })[0])
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Amount' })[1])
+    fireEvent.click(container.querySelector('.generateButton') as HTMLButtonElement)
+
+    await waitFor(() => expect(container.querySelectorAll('.workbookFrame')).toHaveLength(2))
+    const summaryFrame = container.querySelectorAll('.workbookFrame')[1]
+    const summaryHeaders = summaryFrame.querySelectorAll('thead tr:nth-child(2) th')
+    const modelHeader = summaryHeaders[1] as HTMLTableCellElement
+    const amountHeader = summaryHeaders[2] as HTMLTableCellElement
+
+    fireEvent.pointerDown(amountHeader, { pointerId: 1, button: 0, clientX: 220, clientY: 32 })
+    fireEvent.pointerMove(modelHeader, { pointerId: 1, clientX: 120, clientY: 32 })
+    fireEvent.pointerUp(modelHeader, { pointerId: 1, clientX: 120, clientY: 32 })
+
+    await waitFor(() => {
+      const reorderedHeaders = Array.from(summaryFrame.querySelectorAll('thead tr:nth-child(2) th'))
+        .slice(1)
+        .map((header) => header.textContent)
+      expect(reorderedHeaders).toEqual(['Amount', 'Model'])
     })
   })
 })
